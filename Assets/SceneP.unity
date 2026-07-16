@@ -14,18 +14,18 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 1
-  m_FogColor: {r: 0.7169812, g: 0.7169812, b: 0.7169812, a: 1}
+  m_Fog: 0
+  m_FogColor: {r: 0.015, g: 0.02, b: 0.04, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.02
+  m_FogDensity: 0.0008
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 1.9308175, g: 1.9538784, b: 2, a: 1}
-  m_AmbientEquatorColor: {r: 0.46291667, g: 0.53988355, b: 0.59119487, a: 1}
-  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  m_AmbientSkyColor: {r: 0.08, g: 0.1, b: 0.16, a: 1}
+  m_AmbientEquatorColor: {r: 0.04, g: 0.05, b: 0.08, a: 1}
+  m_AmbientGroundColor: {r: 0.01, g: 0.01, b: 0.02, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 1
-  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  m_AmbientMode: 0
+  m_SubtractiveShadowColor: {r: 0.02, g: 0.025, b: 0.04, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: edd067040923b6040beee77561255203, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
@@ -33,7 +33,7 @@ RenderSettings:
   m_HaloTexture: {fileID: 0}
   m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
   m_DefaultReflectionMode: 0
-  m_DefaultReflectionResolution: 128
+  m_DefaultReflectionResolution: 256
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
@@ -154,7 +154,7 @@ MonoBehaviour:
   m_CustomShadowLayers: 0
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
-  m_SoftShadowQuality: 0
+  m_SoftShadowQuality: 3
   m_RenderingLayersMask:
     serializedVersion: 0
     m_Bits: 1
@@ -176,8 +176,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 4
+  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Intensity: 2.2
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -186,9 +186,9 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_Strength: 0.92
+    m_Bias: 0.04
+    m_NormalBias: 0.35
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1
@@ -220,14 +220,14 @@ Light:
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
-  m_ColorTemperature: 6570
-  m_UseColorTemperature: 0
+  m_ColorTemperature: 5800
+  m_UseColorTemperature: 1
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
   m_ShadowRadius: 0
-  m_ShadowAngle: 0
+  m_ShadowAngle: 1.5
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
@@ -289,14 +289,20 @@ MonoBehaviour:
   anim: {fileID: 5866666021654270078}
   cam: {fileID: 961739753}
   feet: {fileID: 1992274930}
-  kickForce: 1600
+  kickForce: 8000
   energy: 100
   kickEnergyCost: 10
   kickableLayer:
     serializedVersion: 2
     m_Bits: 64
-  landProbeRadius: 2.5
-  landProbeDistance: 4
+  aimKickBlend: 0.85
+  groundProbeRadius: 0.45
+  groundProbeDistance: 3.5
+  groundStickOffset: 0.05
+  standHeight: 0
+  groundSnapStrength: 25
+  approachRotateRadius: 55
+  uprightRotateSpeed: 8
   jetCharges: 3
   jetImpulse: 280
   jetEnergyCost: 5
@@ -462,8 +468,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_RenderShadows: 1
-  m_RequiresDepthTextureOption: 2
-  m_RequiresOpaqueTextureOption: 2
+  m_RequiresDepthTextureOption: 1
+  m_RequiresOpaqueTextureOption: 1
   m_CameraType: 0
   m_Cameras: []
   m_RendererIndex: -1
@@ -476,7 +482,7 @@ MonoBehaviour:
   m_Antialiasing: 3
   m_AntialiasingQuality: 2
   m_StopNaN: 1
-  m_Dithering: 0
+  m_Dithering: 1
   m_ClearDepth: 1
   m_AllowXRRendering: 1
   m_AllowHDROutput: 1
@@ -487,11 +493,11 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_TaaSettings:
     m_Quality: 3
-    m_FrameInfluence: 0.100000024
+    m_FrameInfluence: 0.120000005
     m_JitterScale: 1
     m_MipBias: 0
-    m_VarianceClampScale: 0.9
-    m_ContrastAdaptiveSharpening: 0
+    m_VarianceClampScale: 0.99
+    m_ContrastAdaptiveSharpening: 0.35
   m_Version: 2
 --- !u!81 &961739751
 AudioListener:
@@ -532,9 +538,9 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
-  field of view: 60
+  near clip plane: 0.15
+  far clip plane: 80000
+  field of view: 100
   orthographic: 0
   orthographic size: 30.34
   m_Depth: -1
@@ -579,6 +585,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3a7367aa9bef884da5d9998c673c494, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraShake
+  traumaDecay: 1.35
+  maxOffset: 0.55
+  maxAngle: 2.2
+  noiseFrequency: 22
+  kickForceTraumaScale: 0.008
+  velocityTraumaScale: 0.035
+  minTrauma: 0.12
+  maxTrauma: 1
 --- !u!1 &1657784302
 GameObject:
   m_ObjectHideFlags: 0
@@ -634,13 +648,37 @@ MonoBehaviour:
   - {fileID: 4472852310851442080, guid: 0becc78f8cc92854daf9d51d8fbbdc07, type: 3}
   - {fileID: 2419295364090734408, guid: 9487097a230aa4a42a77a674bfbf0266, type: 3}
   - {fileID: 1363069120470361049, guid: 9498af6534392eb4380ce2b5f08d6119, type: 3}
+  earthPrefab: {fileID: 3851826173548475880, guid: a42a59c247db6d24eb26900fa38ae32d, type: 3}
+  startingPlanetWorldRadius: 10000
+  nearbyPlanetRadiusMin: 4000
+  nearbyPlanetRadiusMax: 9000
+  planetMeshLocalRadius: 1
+  spawnClearance: 5
+  planetAtmosphereHeight: 2500
+  journeyDirection: {x: 0.35, y: 0.15, z: 1}
+  earthDistance: 10000
+  earthAnchor: {fileID: 0}
+  phaseCount: 4
+  steppingStonesPerPhase: 5
+  sideDebrisPerPhase: 6
+  spikeChance: 0.3
+  spikeChancePerPhase: 0.2
+  maxKickGap: 130
+  minKickGap: 70
+  pathWidth: 45
+  debrisMinScale: 4
+  debrisMaxScale: 12
+  driftRadius: 14
+  minDriftSpeed: 0.15
+  maxDriftSpeed: 1.6
+  minSpinSpeed: 4
+  maxSpinSpeed: 28
+  spikeDriftMultiplier: 1.25
   numberOfPlanets: 5
-  minSpawnRadius: 100
-  maxSpawnRadius: 1000
-  minDistanceBetweenPlanets: 150
-  minScale: 1
-  maxScale: 3
   startSurfaceNormal: {x: 0, y: 1, z: 0}
+  kickableLayerIndex: 6
+  colliderEnableRadius: 140
+  colliderDisableRadius: 200
 --- !u!4 &1657784304
 Transform:
   m_ObjectHideFlags: 0
@@ -665,7 +703,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1687565359}
-  - component: {fileID: 1687565361}
   - component: {fileID: 1687565360}
   m_Layer: 0
   m_Name: CamStand
@@ -683,7 +720,7 @@ Transform:
   m_GameObject: {fileID: 1687565358}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 23.8, y: 6174.8003, z: -23.6}
+  m_LocalPosition: {x: 0, y: 10020, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -706,7 +743,7 @@ MonoBehaviour:
   collisionLayers:
     serializedVersion: 2
     m_Bits: 64
-  distance: 20
+  distance: 30
   height: 6
   lookAtHeight: 2
   mouseSensitivity: 10
@@ -717,18 +754,6 @@ MonoBehaviour:
   urp: {fileID: 11400000, guid: f288ae1f4751b564a96ac7587541f7a2, type: 2}
   accelerationExtraDistance: 3
   accelerationLerpSpeed: 2
---- !u!114 &1687565361
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1687565358}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3a7367aa9bef884da5d9998c673c494, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
 --- !u!1 &1992274929
 GameObject:
   m_ObjectHideFlags: 0
@@ -833,7 +858,7 @@ Transform:
   m_GameObject: {fileID: 919132149410631870}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 18.26, y: 6170, z: -14.44}
+  m_LocalPosition: {x: 0, y: 11000, z: 0}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 1
   m_Children:

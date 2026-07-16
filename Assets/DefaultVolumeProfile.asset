@@ -15,10 +15,10 @@ MonoBehaviour:
   active: 1
   temperature:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: -12
   tint:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 4
 --- !u!114 &-8283572965594913251
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -56,25 +56,25 @@ MonoBehaviour:
   active: 1
   shadows:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 1, w: 0}
+    m_Value: {x: 0.7321428, y: 0.80357134, z: 1, w: -0.04}
   midtones:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 1, w: 0}
+    m_Value: {x: 0.9047619, y: 0.9333334, z: 1, w: 0}
   highlights:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 1, w: 0}
+    m_Value: {x: 1, y: 0.9444444, z: 0.83333325, w: 0.02}
   shadowsStart:
     m_OverrideState: 1
     m_Value: 0
   shadowsEnd:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.25
   highlightsStart:
     m_OverrideState: 1
-    m_Value: 0.04
+    m_Value: 0.35
   highlightsEnd:
     m_OverrideState: 1
-    m_Value: 0.04
+    m_Value: 0.85
 --- !u!114 &-6708685940617363950
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -93,10 +93,10 @@ MonoBehaviour:
     m_Value: 2
   intensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.18
   response:
     m_OverrideState: 1
-    m_Value: 0.52
+    m_Value: 0.65
   texture:
     m_OverrideState: 1
     m_Value: {fileID: 0}
@@ -115,25 +115,25 @@ MonoBehaviour:
   active: 1
   skipIterations:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   threshold:
     m_OverrideState: 1
-    m_Value: 0.67
+    m_Value: 0.78
   intensity:
     m_OverrideState: 1
-    m_Value: 0.44
+    m_Value: 0.75
   scatter:
     m_OverrideState: 1
-    m_Value: 0.29
+    m_Value: 0.62
   clamp:
     m_OverrideState: 1
     m_Value: 65472
   tint:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_Value: {r: 0.85, g: 0.92, b: 1, a: 1}
   highQualityFiltering:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
   filter:
     m_OverrideState: 1
     m_Value: 0
@@ -142,7 +142,7 @@ MonoBehaviour:
     m_Value: 0
   maxIterations:
     m_OverrideState: 1
-    m_Value: 6
+    m_Value: 7
   dirtTexture:
     m_OverrideState: 1
     m_Value: {fileID: 0}
@@ -171,10 +171,10 @@ MonoBehaviour:
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.32
   smoothness:
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0.45
   rounded:
     m_OverrideState: 1
     m_Value: 0
@@ -233,19 +233,19 @@ MonoBehaviour:
   active: 1
   postExposure:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.2
   contrast:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 14
   colorFilter:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_Value: {r: 0.9, g: 0.94, b: 1, a: 1}
   hueShift:
     m_OverrideState: 1
     m_Value: 0
   saturation:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 10
 --- !u!114 &-2476626987175210372
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -258,16 +258,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c01700fd266d6914ababb731e09af2eb, type: 3}
   m_Name: DepthOfField
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.DepthOfField
-  active: 0
+  active: 1
   mode:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   gaussianStart:
     m_OverrideState: 1
     m_Value: 10
   gaussianEnd:
     m_OverrideState: 1
-    m_Value: 40
+    m_Value: 30
   gaussianMaxRadius:
     m_OverrideState: 1
     m_Value: 1
@@ -515,13 +515,13 @@ MonoBehaviour:
   active: 1
   shadows:
     m_OverrideState: 1
-    m_Value: {r: 0.25157225, g: 0.25157225, b: 0.25157225, a: 1}
+    m_Value: {r: 0.2, g: 0.28, b: 0.45, a: 1}
   highlights:
     m_OverrideState: 1
-    m_Value: {r: 0.61006284, g: 0.61006284, b: 0.61006284, a: 1}
+    m_Value: {r: 0.95, g: 0.88, b: 0.72, a: 1}
   balance:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: -8
 --- !u!114 &-372604355485530254
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -537,7 +537,7 @@ MonoBehaviour:
   active: 1
   intensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.08
 --- !u!114 &-349538353972582157
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -657,10 +657,10 @@ MonoBehaviour:
     m_Value: 2
   intensity:
     m_OverrideState: 1
-    m_Value: 0.05
+    m_Value: 0.15
   clamp:
     m_OverrideState: 1
-    m_Value: 0.05
+    m_Value: 0.08
 --- !u!114 &5080177288966883802
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -704,31 +704,31 @@ MonoBehaviour:
   active: 1
   intensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.35
   tintColor:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_Value: {r: 0.9, g: 0.95, b: 1, a: 1}
   bloomMip:
     m_OverrideState: 1
     m_Value: 1
   firstFlareIntensity:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0.8
   secondaryFlareIntensity:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0.55
   warpedFlareIntensity:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0.4
   warpedFlareScale:
     m_OverrideState: 1
     m_Value: {x: 1, y: 1}
   samples:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 2
   sampleDimmer:
     m_OverrideState: 1
-    m_Value: 0.5
+    m_Value: 0.45
   vignetteEffect:
     m_OverrideState: 1
     m_Value: 1
@@ -737,25 +737,25 @@ MonoBehaviour:
     m_Value: 1.25
   scale:
     m_OverrideState: 1
-    m_Value: 1.5
+    m_Value: 1.35
   streaksIntensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.25
   streaksLength:
     m_OverrideState: 1
-    m_Value: 0.5
+    m_Value: 0.55
   streaksOrientation:
     m_OverrideState: 1
     m_Value: 0
   streaksThreshold:
     m_OverrideState: 1
-    m_Value: 0.25
+    m_Value: 0.35
   resolution:
     m_OverrideState: 1
     m_Value: 4
   chromaticAbberationIntensity:
     m_OverrideState: 1
-    m_Value: 0.5
+    m_Value: 0.35
 --- !u!114 &7255353609818049882
 MonoBehaviour:
   m_ObjectHideFlags: 3

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,6 +6,7 @@ using UnityEngine;
 /// Builds a kick-reachable journey: Starting Planet → debris phases → Earth marker.
 /// MeshColliders are added only near the player via DebrisProximityColliders.
 /// </summary>
+[DefaultExecutionOrder(-100)]
 public class PlanetGenerator : MonoBehaviour
 {
     [Header("Prefabs")]
@@ -14,10 +16,22 @@ public class PlanetGenerator : MonoBehaviour
     [Tooltip("Optional. If empty, Earth is a tagged empty marker you can parent a mesh under later.")]
     public GameObject earthPrefab;
 
+    [Header("Planet Size (world units — ignores tiny prefab scale)")]
+    [Tooltip("Unity default sphere local radius is 0.5. Stickman ~scale 10 ≈ height ~10–20.")]
+    public float startingPlanetWorldRadius = 10000f;
+    public float nearbyPlanetRadiusMin = 4000f;
+    public float nearbyPlanetRadiusMax = 9000f;
+    [Tooltip("Fallback local mesh radius if mesh bounds can't be read. Prefab SphereSmooth ≈ 1.")]
+    public float planetMeshLocalRadius = 1f;
+    [Tooltip("Extra world units outside the surface when parking the player (avoids burying under mesh).")]
+    public float spawnClearance = 5f;
+    [Tooltip("Gravity falloff distance beyond the surface")]
+    public float planetAtmosphereHeight = 2500f;
+
     [Header("Journey / Earth")]
     public Vector3 journeyDirection = new Vector3(0.35f, 0.15f, 1f);
     [Tooltip("Distance from starting-planet SURFACE to Earth")]
-    public float earthDistance = 1200f;
+    public float earthDistance = 3500f;
     public Transform earthAnchor;
 
     [Header("Phases")]
@@ -33,11 +47,11 @@ public class PlanetGenerator : MonoBehaviour
     public float maxKickGap = 130f;
     public float minKickGap = 70f;
     public float pathWidth = 45f;
-    public float debrisMinScale = 4f;
-    public float debrisMaxScale = 12f;
+    public float debrisMinScale = 8f;
+    public float debrisMaxScale = 25f;
 
     [Header("Asteroid Drift")]
-    public float driftRadius = 14f;
+    public float driftRadius = 18f;
     [Tooltip("Slowest rocks")]
     public float minDriftSpeed = 0.15f;
     [Tooltip("Fastest rocks")]
@@ -46,13 +60,9 @@ public class PlanetGenerator : MonoBehaviour
     public float maxSpinSpeed = 28f;
     public float spikeDriftMultiplier = 1.25f;
 
-    [Header("Legacy Planet Field (optional flavor)")]
+    [Header("Extra Flavor Planets")]
     public int numberOfPlanets = 3;
-    public float minSpawnRadius = 1200f;
-    public float maxSpawnRadius = 2200f;
-    public float minDistanceBetweenPlanets = 400f;
-    public float minScale = 0.5f;
-    public float maxScale = 2.0f;
+    float minDistanceBetweenPlanets = 20000f;
 
     [Header("Player Spawn")]
     [Tooltip("Player stands on this local up of the starting planet first")]
@@ -69,19 +79,28 @@ public class PlanetGenerator : MonoBehaviour
     readonly List<Vector3> spawnedPositions = new List<Vector3>();
     readonly List<PlanetGravity> gravityBodies = new List<PlanetGravity>();
 
-    void Start()
+    bool worldGenerated;
+
+    void Awake()
     {
+        // Must run before first FixedUpdate — scene stickman starts at y≈6170 inside R=10000.
         GenerateWorld();
     }
 
     void GenerateWorld()
     {
+        if (worldGenerated) return;
+        worldGenerated = true;
+
         Vector3 dir = journeyDirection.sqrMagnitude > 0.001f
             ? journeyDirection.normalized
             : Vector3.forward;
 
         GameObject start = Instantiate(startingPlanetPrefab, Vector3.zero, Quaternion.identity);
         start.name = "StartingPlanet";
+        // Prefabs are often unit-scale (1,1,1) — force a gigantic world radius here
+        SetPlanetWorldRadius(start, startingPlanetWorldRadius, planetMeshLocalRadius);
+        ConfigurePlanetGravity(start, planetAtmosphereHeight);
         if (string.IsNullOrEmpty(start.tag) || start.tag == "Untagged")
             start.tag = "Planet";
         spawnedPositions.Add(Vector3.zero);
@@ -99,6 +118,9 @@ public class PlanetGenerator : MonoBehaviour
         // Blend journey into standing hemisphere so rocks appear in front of a standing player
         if (Vector3.Dot(leaveDir, standUp) < 0.35f)
             leaveDir = Vector3.Slerp(leaveDir, standUp, 0.55f).normalized;
+
+        Physics.SyncTransforms();
+        PlacePlayerOnPlanet(start, standUp);
 
         Vector3 pathOrigin = start.transform.position + leaveDir * (startRadius + minKickGap * 0.85f);
         Vector3 earthPos = start.transform.position + leaveDir * (startRadius + earthDistance);
@@ -136,8 +158,16 @@ public class PlanetGenerator : MonoBehaviour
         }
         gravityBodies.Clear();
 
-        // Stand on the planet first — aiming at debris is the player's job before kickoff
-        PlacePlayerOnPlanet(start, standUp);
+        // One more snap after debris/physics settle
+        StartCoroutine(ResnapPlayerNextFrame(start, standUp));
+    }
+
+    IEnumerator ResnapPlayerNextFrame(GameObject planet, Vector3 standUp)
+    {
+        yield return new WaitForFixedUpdate();
+        Physics.SyncTransforms();
+        if (planet != null)
+            PlacePlayerOnPlanet(planet, standUp);
     }
 
     void EnsureProximitySystem()
@@ -170,7 +200,8 @@ public class PlanetGenerator : MonoBehaviour
             earthGo.transform.position = earthPos;
             SphereCollider col = earthGo.AddComponent<SphereCollider>();
             col.isTrigger = true;
-            col.radius = 80f;
+            // Readable target volume relative to planet-scale journey
+            col.radius = Mathf.Max(200f, startingPlanetWorldRadius * 0.04f);
         }
 
         earthGo.name = "Earth";
@@ -289,8 +320,9 @@ public class PlanetGenerator : MonoBehaviour
         if (nearbyPlanetPrefabs == null || nearbyPlanetPrefabs.Length == 0)
             return;
 
-        float minR = Mathf.Max(minSpawnRadius, startRadius + 250f);
-        float maxR = Mathf.Max(maxSpawnRadius, minR + 400f);
+        // Keep other planets well clear of the starting world's body
+        float minR = startRadius + Mathf.Max(nearbyPlanetRadiusMax, 10000f);
+        float maxR = minR + Mathf.Max(startingPlanetWorldRadius, 50000f);
 
         int attempts = 0;
         int spawnedCount = 0;
@@ -303,7 +335,9 @@ public class PlanetGenerator : MonoBehaviour
 
             GameObject prefab = nearbyPlanetPrefabs[Random.Range(0, nearbyPlanetPrefabs.Length)];
             GameObject planet = Instantiate(prefab, randomPos, Random.rotation, transform);
-            planet.transform.localScale = Vector3.one * Random.Range(minScale, maxScale);
+            float worldRadius = Random.Range(nearbyPlanetRadiusMin, nearbyPlanetRadiusMax);
+            SetPlanetWorldRadius(planet, worldRadius, planetMeshLocalRadius);
+            ConfigurePlanetGravity(planet, planetAtmosphereHeight * Random.Range(0.7f, 1.1f));
             try { if (planet.CompareTag("Untagged")) planet.tag = "Planet"; } catch { }
 
             PlanetGravity g = planet.GetComponent<PlanetGravity>();
@@ -315,64 +349,125 @@ public class PlanetGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Scales the planet so the rendered mesh outer shell reaches worldRadius,
+    /// then syncs SphereCollider to that same local radius (never smaller than the mesh).
+    /// </summary>
+    public static void SetPlanetWorldRadius(GameObject planet, float worldRadius, float meshLocalRadius = 1f)
+    {
+        if (planet == null || worldRadius <= 0.01f) return;
+
+        Vector3 localCenter;
+        float localRadius = ResolveLocalMeshRadius(planet, meshLocalRadius, out localCenter);
+
+        SphereCollider sphere = planet.GetComponent<SphereCollider>();
+        if (sphere != null)
+        {
+            sphere.center = localCenter;
+            sphere.radius = localRadius;
+        }
+
+        float uniformScale = worldRadius / localRadius;
+        planet.transform.localScale = Vector3.one * uniformScale;
+
+        Physics.SyncTransforms();
+    }
+
+    /// <summary>
+    /// Local radius that fully covers the visual mesh. Undersizing this buries the player under the shell.
+    /// </summary>
+    public static float ResolveLocalMeshRadius(GameObject planet, float fallback, out Vector3 localCenter)
+    {
+        localCenter = Vector3.zero;
+        float best = 0f;
+
+        MeshFilter mf = planet != null ? planet.GetComponentInChildren<MeshFilter>() : null;
+        Mesh mesh = mf != null ? mf.sharedMesh : null;
+        if (mesh != null)
+        {
+            Bounds b = mesh.bounds;
+            localCenter = b.center;
+            // Max axis extent ≈ sphere radius. Do NOT use extents.magnitude (that is R*√3).
+            best = Mathf.Max(b.extents.x, Mathf.Max(b.extents.y, b.extents.z));
+        }
+
+        SphereCollider sphere = planet != null ? planet.GetComponent<SphereCollider>() : null;
+        if (sphere != null)
+        {
+            if (best < 0.01f)
+                localCenter = sphere.center;
+            // Collider must not be smaller than the mesh, or spawn sits under the visual shell
+            best = Mathf.Max(best, sphere.radius);
+        }
+
+        if (fallback > 0.01f)
+            best = Mathf.Max(best, fallback);
+
+        if (best < 0.01f)
+            best = 1f;
+
+        if (localCenter.sqrMagnitude < 0.0001f)
+            localCenter = Vector3.zero;
+
+        return best;
+    }
+
+    static void ConfigurePlanetGravity(GameObject planet, float atmosphereHeight)
+    {
+        PlanetGravity g = planet.GetComponent<PlanetGravity>();
+        if (g == null) return;
+        g.atmosphereHeight = atmosphereHeight;
+    }
+
     void PlacePlayerOnPlanet(GameObject planet, Vector3 standUp)
     {
         GameObject playerGo = GameObject.FindGameObjectWithTag("Player");
         if (playerGo == null || planet == null) return;
 
         CharacterMovement movement = playerGo.GetComponent<CharacterMovement>();
-        Transform player = playerGo.transform;
-        Rigidbody rb = movement != null && movement.rb != null
-            ? movement.rb
-            : playerGo.GetComponent<Rigidbody>();
-
-        float radius = GetPlanetRadius(planet);
-        Vector3 surfacePoint = planet.transform.position + standUp * radius;
-
-        player.rotation = Quaternion.FromToRotation(Vector3.up, standUp);
-        AlignBottomToSurface(player, surfacePoint, standUp);
-
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.isKinematic = true;
-        }
-
-        player.SetParent(planet.transform, true);
         if (movement != null)
-            movement.StickTo(planet.transform);
-    }
-
-    static void AlignBottomToSurface(Transform player, Vector3 surfacePoint, Vector3 up)
-    {
-        Renderer[] renderers = player.GetComponentsInChildren<Renderer>();
-        if (renderers.Length == 0)
         {
-            player.position = surfacePoint;
+            movement.SpawnOnSurface(planet, standUp, spawnClearance);
             return;
         }
 
-        player.position = surfacePoint;
+        Transform player = playerGo.transform;
+        Rigidbody rb = playerGo.GetComponent<Rigidbody>();
+        float radius = GetPlanetRadius(planet);
+        Vector3 center = GetPlanetCenter(planet);
+        Vector3 dir = standUp.normalized;
+        float clearance = Mathf.Max(spawnClearance, radius * 0.0005f);
+        Vector3 point = center + dir * (radius + clearance);
 
-        Bounds bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++)
-            bounds.Encapsulate(renderers[i].bounds);
-
-        float minAlongUp = float.MaxValue;
-        Vector3 c = bounds.center;
-        Vector3 e = bounds.extents;
-        for (int x = -1; x <= 1; x += 2)
-        for (int y = -1; y <= 1; y += 2)
-        for (int z = -1; z <= 1; z += 2)
+        player.SetParent(null, true);
+        player.rotation = Quaternion.FromToRotation(Vector3.up, dir);
+        player.position = point;
+        if (rb != null)
         {
-            Vector3 corner = c + Vector3.Scale(e, new Vector3(x, y, z));
-            float along = Vector3.Dot(corner - player.position, up);
-            if (along < minAlongUp)
-                minAlongUp = along;
+            rb.isKinematic = false;
+            rb.useGravity = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.position = player.position;
+            rb.rotation = player.rotation;
         }
+    }
 
-        player.position = surfacePoint - up * minAlongUp;
+    public static Vector3 GetPlanetCenter(GameObject planet)
+    {
+        SphereCollider sphere = planet.GetComponent<SphereCollider>();
+        if (sphere != null)
+            return planet.transform.TransformPoint(sphere.center);
+
+        Collider col = planet.GetComponent<Collider>();
+        if (col != null)
+            return col.bounds.center;
+
+        Renderer r = planet.GetComponentInChildren<Renderer>();
+        if (r != null)
+            return r.bounds.center;
+
+        return planet.transform.position;
     }
 
     public static float GetPlanetRadius(GameObject planet)
@@ -380,15 +475,27 @@ public class PlanetGenerator : MonoBehaviour
         SphereCollider sphere = planet.GetComponent<SphereCollider>();
         if (sphere != null)
         {
-            Vector3 scale = planet.transform.lossyScale;
-            return sphere.radius * Mathf.Max(scale.x, scale.y, scale.z);
+            Vector3 s = planet.transform.lossyScale;
+            float maxS = Mathf.Max(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z));
+            return sphere.radius * maxS;
         }
 
-        Renderer renderer = planet.GetComponent<Renderer>();
+        Renderer renderer = planet.GetComponentInChildren<Renderer>();
         if (renderer != null)
-            return Mathf.Max(renderer.bounds.extents.x, renderer.bounds.extents.y, renderer.bounds.extents.z);
+        {
+            Vector3 e = renderer.bounds.extents;
+            return Mathf.Max(e.x, e.y, e.z);
+        }
 
-        return Mathf.Max(planet.transform.lossyScale.x, planet.transform.lossyScale.y, planet.transform.lossyScale.z) * 0.5f;
+        Collider col = planet.GetComponent<Collider>();
+        if (col != null)
+        {
+            Vector3 e = col.bounds.extents;
+            return Mathf.Max(e.x, e.y, e.z);
+        }
+
+        Vector3 ls = planet.transform.lossyScale;
+        return Mathf.Max(Mathf.Abs(ls.x), Mathf.Abs(ls.y), Mathf.Abs(ls.z)) * 0.985f;
     }
 
     bool IsValidPosition(Vector3 pos)
