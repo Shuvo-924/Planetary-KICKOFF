@@ -1,112 +1,173 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Drift + optional near-player MeshCollider. Speeds vary per rock.
+/// Slow drift + tumble. Uses a SphereCollider for reliable landing (mesh hulls fail often).
 /// </summary>
 public class AsteroidMotion : MonoBehaviour
 {
-    public static readonly System.Collections.Generic.List<AsteroidMotion> All =
-        new System.Collections.Generic.List<AsteroidMotion>();
+    public static readonly List<AsteroidMotion> All = new List<AsteroidMotion>();
 
-    [HideInInspector] public Vector3 anchor;
-    public float driftRadius = 12f;
-    public float driftSpeed = 1f;
-    public float spinSpeed = 12f;
-    public bool isSpike;
+    [HideInInspector] public bool isSpike;
+    public float recoilDamping = 0.35f;
 
-    Vector3 velocity;
-    Vector3 spinAxis;
-    MeshCollider meshCollider;
-    MeshFilter meshFilter;
-    bool colliderWanted;
+    public Vector3 CurrentVelocity => driftDir * driftSpeed + recoil;
+
+    Vector3 driftDir = Vector3.forward;
+    float driftSpeed = 0.05f;
+    Vector3 spinAxis = Vector3.up;
+    float spinSpeed = 1f;
+    Vector3 recoil;
+    float mass = 80f;
+    SphereCollider landCol;
+    float landRadius = 1f;
 
     public Bounds WorldBounds
     {
         get
         {
-            Renderer r = GetComponentInChildren<Renderer>();
+            var r = GetComponentInChildren<Renderer>();
             if (r != null) return r.bounds;
             float s = Mathf.Max(transform.lossyScale.x, 1f) * 0.5f;
             return new Bounds(transform.position, Vector3.one * s);
         }
     }
 
-    public void Init(Vector3 orbitAnchor, float radius, float moveSpeed, float spinDegPerSec, bool spike)
+    /// <summary>World-space landing radius (sphere approx of the rock).</summary>
+   public float LandRadius
+{
+    get
     {
-        anchor = orbitAnchor;
-        driftRadius = Mathf.Max(1f, radius);
-        driftSpeed = Mathf.Max(0.05f, moveSpeed);
-        spinSpeed = spinDegPerSec;
-        isSpike = spike;
-        velocity = Random.onUnitSphere * driftSpeed;
+        // Use the Renderer's bounds as the most accurate world-space size
+        var r = GetComponent<SphereCollider>();
+        if (r != null)
+        {
+            // We take the largest extent to ensure a safe "Catch Sphere"
+            Vector3 extents = r.radius * Vector3.one;
+            return Mathf.Max(extents.x, Mathf.Max(extents.y, extents.z)) * 1.3f;
+        }
+        return transform.lossyScale.y * 1.3f;
+    }
+}
+
+    public bool HasActiveCollider => landCol != null && landCol.enabled;
+
+    public void Init(Vector3 direction, float moveSpeed, float spinDegPerSec, bool spike, float rockMass)
+    {
+        driftDir = direction.sqrMagnitude > 0.0001f ? direction.normalized : Random.onUnitSphere;
+        driftSpeed = Mathf.Max(0.01f, moveSpeed);
         spinAxis = Random.onUnitSphere.normalized;
+        spinSpeed = Mathf.Max(0.1f, spinDegPerSec);
+        isSpike = spike;
+        mass = Mathf.Max(1f, rockMass);
+        recoil = Vector3.zero;
+        EnsureLandCollider();
+        SetColliderActive(true);
     }
 
-    void OnEnable()
+    public void ApplyKickRecoil(Vector3 impulse)
     {
-        if (!All.Contains(this))
-            All.Add(this);
+        if (impulse.sqrMagnitude < 0.0001f) return;
+        recoil += impulse / mass;
     }
 
-    void OnDisable()
+    public void SetColliderActive(bool on)
     {
-        All.Remove(this);
+        EnsureLandCollider();
+        if (landCol != null) landCol.enabled = on;
     }
+
+    /// <summary>Closest surface point + outward normal for landing.</summary>
+    public bool TryGetLanding(Vector3 from, out Vector3 point, out Vector3 normal, out float distance)
+    {
+        EnsureLandCollider();
+        Vector3 center = landCol != null
+            ? transform.TransformPoint(landCol.center)
+            : transform.position;
+        float r = LandRadius;
+
+        Vector3 to = from - center;
+        float dist = to.magnitude;
+
+        if (dist < 0.0001f)
+        {
+            normal = Vector3.up;
+            point = center + normal * r;
+            distance = -r;
+            return true;
+        }
+
+        normal = to / dist;
+        point = center + normal * r;
+        distance = dist - r; // negative = inside
+        return true;
+    }
+
+    void EnsureLandCollider()
+    {
+        if (landCol != null) return;
+
+        foreach (var mc in GetComponents<MeshCollider>())
+            Destroy(mc);
+
+        Vector3 localCenter = Vector3.zero;
+        float localR = 0.5f;
+
+        var mf = GetComponentInChildren<MeshFilter>();
+        if (mf != null && mf.sharedMesh != null)
+        {
+            Bounds b = mf.sharedMesh.bounds;
+            // Mesh bounds are in mesh space; if filter is on this object, use directly
+            if (mf.transform == transform)
+            {
+                localCenter = b.center;
+                localR = Mathf.Max(b.extents.x, b.extents.y, b.extents.z);
+            }
+            else
+            {
+                // Approximate from world renderer bounds → local
+                var rend = GetComponentInChildren<Renderer>();
+                if (rend != null)
+                {
+                    Bounds wb = rend.bounds;
+                    localCenter = transform.InverseTransformPoint(wb.center);
+                    float worldR = Mathf.Max(wb.extents.x, wb.extents.y, wb.extents.z);
+                    float scale = MaxAbsScale(transform);
+                    localR = worldR / Mathf.Max(scale, 0.0001f);
+                }
+            }
+        }
+
+        landRadius = Mathf.Max(0.2f, localR);
+        landCol = gameObject.GetComponent<SphereCollider>();
+        if (landCol == null) landCol = gameObject.AddComponent<SphereCollider>();
+        landCol.center = localCenter;
+        landCol.radius = landRadius;
+        landCol.isTrigger = false;
+    }
+
+    void OnEnable() { if (!All.Contains(this)) All.Add(this); }
+    void OnDisable() => All.Remove(this);
 
     void Awake()
     {
-        meshFilter = GetComponentInChildren<MeshFilter>();
-        if (anchor == Vector3.zero)
-            anchor = transform.position;
-        if (velocity.sqrMagnitude < 0.0001f)
-        {
-            velocity = Random.onUnitSphere * Mathf.Max(0.05f, driftSpeed);
-            spinAxis = Random.onUnitSphere.normalized;
-        }
+        if (driftDir.sqrMagnitude < 0.0001f) driftDir = Random.onUnitSphere;
+        if (spinAxis.sqrMagnitude < 0.0001f) spinAxis = Vector3.up;
+        EnsureLandCollider();
     }
 
     void Update()
     {
-        transform.position += velocity * Time.deltaTime;
+        if (recoilDamping > 0f)
+            recoil = Vector3.Lerp(recoil, Vector3.zero, recoilDamping * Time.deltaTime);
 
-        Vector3 offset = transform.position - anchor;
-        float dist = offset.magnitude;
-        if (dist > driftRadius && dist > 0.001f)
-        {
-            Vector3 normal = offset / dist;
-            velocity = Vector3.Reflect(velocity, normal);
-            velocity = Vector3.Lerp(velocity, -normal * driftSpeed, 0.25f);
-            // Keep speed consistent with this rock's own pace
-            velocity = velocity.normalized * driftSpeed;
-            transform.position = anchor + normal * driftRadius;
-        }
-
-        transform.Rotate(spinAxis, spinSpeed * Time.deltaTime, Space.World);
+        transform.position += (driftDir * driftSpeed + recoil) * Time.deltaTime;
+        transform.Rotate(spinAxis, spinSpeed * Time.deltaTime, Space.Self);
     }
 
-    /// <summary>Enable MeshCollider only while the player is nearby.</summary>
-    public void SetColliderActive(bool active)
+    static float MaxAbsScale(Transform t)
     {
-        colliderWanted = active;
-        if (!active)
-        {
-            if (meshCollider != null)
-                meshCollider.enabled = false;
-            return;
-        }
-
-        if (meshCollider == null)
-        {
-            if (meshFilter == null || meshFilter.sharedMesh == null)
-                return;
-
-            meshCollider = gameObject.AddComponent<MeshCollider>();
-            meshCollider.sharedMesh = meshFilter.sharedMesh;
-            meshCollider.convex = true;
-        }
-
-        meshCollider.enabled = true;
+        Vector3 s = t.lossyScale;
+        return Mathf.Max(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z));
     }
-
-    public bool HasActiveCollider => meshCollider != null && meshCollider.enabled;
 }

@@ -2,57 +2,30 @@ using UnityEngine;
 
 public class PlanetGravity : MonoBehaviour
 {
-    public float maxGravity = 9.8f;
-    public float atmosphereHeight = 500f;
+    public float maxGravity = 15f;
+    public float atmosphereHeight = 400f;
+    private CharacterMovement playerMove;
 
-    [SerializeField] Rigidbody playerRb;
-    CharacterMovement playerMove;
-
-    void Awake()
+    void Start()
     {
-        CachePlayer();
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null) playerMove = p.GetComponent<CharacterMovement>();
     }
-
-    void CachePlayer()
-    {
-        if (playerRb != null && playerMove != null) return;
-
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player == null) return;
-
-        if (playerRb == null)
-            playerRb = player.GetComponent<Rigidbody>();
-        playerMove = player.GetComponent<CharacterMovement>();
-    }
-
-    public void getPlanets() { }
 
     void FixedUpdate()
     {
-        if (playerRb == null)
+        if (playerMove == null) return;
+
+        Vector3 center = PlanetGenerator.GetPlanetCenter(gameObject);
+        Vector3 toPlanet = center - playerMove.transform.position;
+        float dist = toPlanet.magnitude;
+        float radius = PlanetGenerator.GetPlanetRadius(gameObject);
+
+        if (dist < radius + atmosphereHeight)
         {
-            CachePlayer();
-            if (playerRb == null) return;
+            float fade = 1f - Mathf.Clamp01((dist - radius) / atmosphereHeight);
+            float accel = maxGravity * (radius / Mathf.Max(dist, radius)) * fade;
+            playerMove.NotifyGravityPull(toPlanet.normalized, accel);
         }
-
-        if (playerRb.isKinematic) return;
-        if (playerMove != null && playerMove.InSpawnGrace) return;
-
-        Vector3 planetCenter = PlanetGenerator.GetPlanetCenter(gameObject);
-        float dist = Vector3.Distance(playerRb.position, planetCenter);
-        float planetRadius = PlanetGenerator.GetPlanetRadius(gameObject);
-        float gravityRange = planetRadius + atmosphereHeight;
-        if (dist >= gravityRange) return;
-
-        float gravityRatio = 1f - Mathf.Clamp01((dist - planetRadius) / Mathf.Max(atmosphereHeight, 0.01f));
-        if (playerMove != null && playerMove.IsGrounded)
-            gravityRatio = Mathf.Max(gravityRatio, 0.65f);
-
-        float strength = maxGravity * gravityRatio;
-        Vector3 gravityDir = (planetCenter - playerRb.position).normalized;
-        playerRb.AddForce(gravityDir * strength, ForceMode.Acceleration);
-
-        if (playerMove != null)
-            playerMove.NotifyGravityPull(gravityDir, strength);
     }
 }

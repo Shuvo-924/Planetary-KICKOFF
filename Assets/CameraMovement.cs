@@ -1,122 +1,59 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.Rendering.Universal;
 
 public class CameraMovement : MonoBehaviour
 {
-    [Header("Targets")]
-    public Transform carTransform;
-    public LayerMask collisionLayers; // IMPORTANT: Set this to everything EXCEPT the car layer
+    [Header("Targeting")]
+    public Transform playerTf;
+    public LayerMask collisionLayers;
 
-    [Header("Offset Settings")]
-    public float distance = 6.0f;
-    public float height = 2.0f;
-    public float lookAtHeight = 1.0f;
-
-    [Header("Mouse Control")]
+    [Header("Orbit")]
+    public float distance = 12f;
     public float mouseSensitivity = 3f;
-    public float minVerticalAngle = -10f;
-    public float maxVerticalAngle = 60f;
+    public float orbitDamping = 12f;
+    public float lookAtOffset = 2f;
 
-    [Header("Smoothness")]
-    public float rotationSmoothTime = 0.12f; // Smooths the "lagging" rotation
-    public float positionSmoothTime = 0.5f; // Smooths the follow distance
+    [Header("Aiming / ADS")]
+    public bool isAiming;
+    public float aimDistance = 4f;
+    public float aimFOV = 40f;
+    public float transitionSpeed = 10f;
+    public float aimSideOffset = 1.2f;
 
-    private float mouseX;
-    private float mouseY;
-    private Vector3 posVelocity = Vector3.zero;
-    private float rotVelocity = 0f;
-    private float currentRotationAngle;
-    private Vector3 previousShakeOffset;
-    public UniversalRendererData urp;
-    private NewCar playerCar;
-    void Awake()
+    private float yaw, pitch = 20f, currentDistance, defaultFOV;
+    private Camera cam;
+
+    void Start()
     {
-        foreach (var feat in urp.rendererFeatures)
-        {
-            if (feat.name.Contains("FullScreenPass"))
-            {
-                feat.SetActive(false);
-                break;
-            }
-        }
-        Cursor.lockState = CursorLockMode.None;
-        playerCar = Object.FindAnyObjectByType<NewCar>();
+        cam = GetComponentInChildren<Camera>();
+        defaultFOV = cam.fieldOfView;
+        currentDistance = distance;
+        Cursor.lockState = CursorLockMode.Locked;
+        yaw = playerTf.eulerAngles.y;
     }
-
-    // Add this inside the CameraMovement class
-    private void OnEnable()
-    {
-        // Sync the mouse input variables with the current rotation 
-        // so the camera doesn't snap back to 0 when control starts
-        Vector3 euler = transform.eulerAngles;
-        mouseX = 0; // We keep mouseX as the offset from car rotation
-        mouseY = 0;
-        currentRotationAngle = euler.y;
-        Vector3 targetPosition = carTransform.position - (Vector3.forward * distance) + (Vector3.up * height);
-        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref posVelocity, positionSmoothTime);
-        transform.LookAt(carTransform.position + Vector3.up * lookAtHeight);
-    }
-
-    [Header("Acceleration Effect")]
-    public float accelerationExtraDistance = 3.0f; // How much further to move back
-    public float accelerationLerpSpeed = 2.0f;     // How fast the camera zooms out
-    private float currentExtraDistance = 0f;       // Internal tracker
 
     void LateUpdate()
     {
-        if (!carTransform) return;
+        if (playerTf == null) return;
 
-        // 1. Capture Mouse Input (Same as before)
-        if (Input.GetMouseButton(2))
-        {
-            mouseX += Input.GetAxis("Mouse X") * mouseSensitivity;
-            mouseY -= Input.GetAxis("Mouse Y") * mouseSensitivity;
-            mouseY = Mathf.Clamp(mouseY, minVerticalAngle, maxVerticalAngle);
-        }
+        isAiming = Input.GetMouseButton(1);
+        
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+        pitch = Mathf.Clamp(pitch - Input.GetAxis("Mouse Y") * mouseSensitivity, -89f, 89f);
 
-        // 2. Smoothly calculate the Horizontal Rotation (Same as before)
-        float targetRotationAngle = carTransform.eulerAngles.y + mouseX;
-        currentRotationAngle = Mathf.SmoothDampAngle(currentRotationAngle, targetRotationAngle, ref rotVelocity, rotationSmoothTime);
-        Quaternion rotation = Quaternion.Euler(mouseY, currentRotationAngle, 0);
+        float targetDist = isAiming ? aimDistance : distance;
+        float targetFOV = isAiming ? aimFOV : defaultFOV;
+        float targetSide = isAiming ? aimSideOffset : 0f;
 
-        // 3. DYNAMIC DISTANCE LOGIC
-        // Determine if we should be backed away or at default distance
-        float targetExtra =  0f;
-        // Smoothly lerp the extra distance value
-        currentExtraDistance = Mathf.Lerp(currentExtraDistance, targetExtra, Time.deltaTime * accelerationLerpSpeed);
+        currentDistance = Mathf.Lerp(currentDistance, targetDist, Time.deltaTime * transitionSpeed);
+        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFOV, Time.deltaTime * transitionSpeed);
 
-        float totalDistance = distance + currentExtraDistance;
+        Quaternion finalRotation = Quaternion.FromToRotation(Vector3.up, playerTf.up) * Quaternion.Euler(pitch, yaw, 0);
+        Vector3 focusPoint = playerTf.position + (playerTf.up * lookAtOffset);
+        Vector3 rightOffset = finalRotation * Vector3.right * targetSide;
+        Vector3 direction = finalRotation * Vector3.forward;
+        Vector3 targetPos = focusPoint + rightOffset - (direction * currentDistance);
 
-        // 4. Calculate Target Position
-        // We use the smoothed totalDistance here
-        Vector3 targetPosition = carTransform.position - (rotation * Vector3.forward * totalDistance) + (Vector3.up * height);
-
-        // 5. TERRAIN COLLISION
-        Vector3 rayStart = carTransform.position + Vector3.up * lookAtHeight;
-        Vector3 rayDirection = (targetPosition - rayStart).normalized;
-        float rayDistance = Vector3.Distance(rayStart, targetPosition);
-
-        RaycastHit hit;
-        if (Physics.Raycast(rayStart, rayDirection, out hit, rayDistance, collisionLayers))
-        {
-            // Move the target position to the hit point (with a small offset)
-            targetPosition = hit.point + hit.normal * 0.2f;
-        }
-
-        // 6. Final Smoothing (strip last shake so SmoothDamp doesn't fight trauma)
-        Vector3 shakeOffset = CameraShake.Instance != null ? CameraShake.Instance.Offset : Vector3.zero;
-        Vector3 unshakenPos = transform.position - previousShakeOffset;
-        Vector3 smoothPos = Vector3.SmoothDamp(unshakenPos, targetPosition, ref posVelocity, positionSmoothTime);
-        transform.position = smoothPos + shakeOffset;
-        previousShakeOffset = shakeOffset;
-
-        // 7. Look At the stickman, then layer rotational shake
-        transform.LookAt(carTransform.position + Vector3.up * lookAtHeight);
-        if (CameraShake.Instance != null)
-            transform.rotation *= Quaternion.Euler(CameraShake.Instance.EulerOffset);
+        transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * orbitDamping);
+        transform.LookAt(isAiming ? focusPoint + direction * 50f : focusPoint, playerTf.up);
     }
 }
