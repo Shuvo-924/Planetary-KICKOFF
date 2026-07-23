@@ -7,10 +7,10 @@ public class CharacterMovement : MonoBehaviour
 {
     private Vector3 moveInput;
     private Vector3 velocity; // Internal velocity for space flight
-    public CharacterController controller;
     public Rigidbody rb; // Set to Kinematic
     public Animator anim;
     public Transform cam;
+    public Transform feet;
 
     [Header("Kick Settings")]
     public float kickForce = 95f;
@@ -35,7 +35,6 @@ public class CharacterMovement : MonoBehaviour
     public float standHeight = 1.1f;
     public float surfacePad = 0.02f;
     private Transform currentGroundTf;
-    private Vector3 relativePos;
     private Quaternion relativeRot;
     private float aimHoldTimer;
     private float airLockTimer;
@@ -63,7 +62,6 @@ public class CharacterMovement : MonoBehaviour
 
     void Awake()
     {
-        controller = GetComponent<CharacterController>();
         rb = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
         camStand = Object.FindAnyObjectByType<CameraMovement>();
@@ -178,33 +176,36 @@ public class CharacterMovement : MonoBehaviour
         Vector3 camRight = Vector3.ProjectOnPlane(cam.right, groundNormal).normalized;
         Vector3 walkDir = (camFwd * moveInput.z + camRight * moveInput.x).normalized;
 
-        Vector3 worldAnchorPos = currentGroundTf.TransformPoint(relativePos);
-        Quaternion worldAnchorRot = currentGroundTf.rotation * relativeRot;
+        // Project the intended walk direction onto the surface normal
+        Vector3 parallelWalkDir = Vector3.ProjectOnPlane(walkDir, groundNormal).normalized;
+        Vector3 worldAnchorPos = currentGroundTf.TransformPoint(transform.position);
+        Quaternion worldAnchorRot = relativeRot;
 
-        Vector3 platformDelta = worldAnchorPos - transform.position;
         Vector3 walkDelta = walkDir * walkSpeed * Time.fixedDeltaTime;
         
-        controller.Move(platformDelta + walkDelta);
 
         bool isWalkingNow = moveInput.sqrMagnitude > 0.01f;
         if (isWalkingNow && walkDir.sqrMagnitude > 0.001f)
         {
             Quaternion lookRot = Quaternion.LookRotation(walkDir, groundNormal);
             transform.rotation = Quaternion.Slerp(transform.rotation, lookRot, uprightRotateSpeed * Time.fixedDeltaTime);
+            transform.position = Vector3.Slerp(transform.position, transform.position + parallelWalkDir, walkSpeed * Time.fixedDeltaTime);
         }
         else
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, worldAnchorRot, uprightRotateSpeed * Time.fixedDeltaTime);
         }
-
-        relativePos = currentGroundTf.InverseTransformPoint(transform.position);
-        relativeRot = Quaternion.Inverse(currentGroundTf.rotation) * transform.rotation;
-        groundNormal = transform.up;
+        RaycastHit hit;
+        if (Physics.Raycast(feet.position, (currentGroundTf.position - feet.position).normalized, out hit, 10f))
+        {
+            relativeRot = Quaternion.Euler(hit.normal);
+            groundNormal = hit.normal;
+        }
+       
     }
 
     void HandleFlightState()
     {
-        controller.Move(velocity * Time.fixedDeltaTime);
 
         if (aimHoldTimer > 0)
         {
@@ -213,7 +214,7 @@ public class CharacterMovement : MonoBehaviour
         else
         {
             Quaternion target = Quaternion.FromToRotation(transform.up, -gravityDir) * transform.rotation;
-            transform.rotation = Quaternion.Slerp(transform.rotation, target, 5f * Time.fixedDeltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.fixedDeltaTime);
         }
     }
 
@@ -246,7 +247,6 @@ public class CharacterMovement : MonoBehaviour
         float force = (aimUI != null) ? aimUI.SelectedForce : kickForce;
         velocity = launchDir * force;
 
-        controller.Move(launchDir * 0.5f);
         airLockTimer = kickAirLock;
 
         if (CameraShake.Instance != null) CameraShake.Instance.ShakeFromKick(force, force);
@@ -291,7 +291,6 @@ public class CharacterMovement : MonoBehaviour
         Vector3 targetPos = hit.point + hit.normal * standHeight;
         transform.position = targetPos;
 
-        relativePos = currentGroundTf.InverseTransformPoint(transform.position);
         relativeRot = Quaternion.Inverse(currentGroundTf.rotation) * transform.rotation;
 
         if (anim != null) anim.SetTrigger("Land");
@@ -312,7 +311,6 @@ public class CharacterMovement : MonoBehaviour
     transform.position = pt + nrm * standHeight;
 
     // 3. ANCHORING
-    relativePos = currentGroundTf.InverseTransformPoint(transform.position);
     relativeRot = Quaternion.Inverse(currentGroundTf.rotation) * transform.rotation;
 
     if (anim != null) anim.SetTrigger("Land");
@@ -331,7 +329,6 @@ public class CharacterMovement : MonoBehaviour
         transform.up = normal;
         groundNormal = normal;
 
-        relativePos = currentGroundTf.InverseTransformPoint(transform.position);
         relativeRot = Quaternion.Inverse(currentGroundTf.rotation) * transform.rotation;
 
         isGrounded = true;
