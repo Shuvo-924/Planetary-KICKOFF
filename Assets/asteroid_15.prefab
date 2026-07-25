@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 6774572675321274109}
   - component: {fileID: 4086884845800569306}
   - component: {fileID: -4019771449376194390}
-  m_Layer: 8
+  m_Layer: 6
   m_Name: asteroid_15
-  m_TagString: Untagged
+  m_TagString: Debris
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

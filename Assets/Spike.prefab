@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -6345285779419725671, guid: 664524837dfc50c43951e80d62e70fb5, type: 3}
       propertyPath: m_Layer
-      value: 4
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 664524837dfc50c43951e80d62e70fb5, type: 3}
       propertyPath: m_Name
@@ -58,7 +58,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 664524837dfc50c43951e80d62e70fb5, type: 3}
       propertyPath: m_Layer
-      value: 4
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 664524837dfc50c43951e80d62e70fb5, type: 3}
+      propertyPath: m_TagString
+      value: Spike
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

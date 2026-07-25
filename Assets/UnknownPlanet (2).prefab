@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8679386976119608502}
   - component: {fileID: -7470550120001400136}
   - component: {fileID: 1517594130942614006}
-  m_Layer: 6
+  m_Layer: 3
   m_Name: UnknownPlanet (2)
   m_TagString: Planet
   m_Icon: {fileID: 0}
@@ -42,7 +42,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 553379787872968579}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: -5495902117074765545, guid: 8cc09609e59b98a44bec6155163212a4, type: 3}
 --- !u!23 &8679386976119608502
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -106,7 +106,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlanetGravity
   maxGravity: 4
   atmosphereHeight: 500
-  minDistance: 2
 --- !u!64 &1517594130942614006
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -128,4 +127,4 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: -5495902117074765545, guid: 8cc09609e59b98a44bec6155163212a4, type: 3}

@@ -3,7 +3,12 @@ guid: 86d3a9d3a6799544b8370221b99d33ce
 ModelImporter:
   serializedVersion: 24300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: heightmap_ref_group
+    second: {fileID: 2100000, guid: 1d6cc2fce928c694889c41730a9f0bdd, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

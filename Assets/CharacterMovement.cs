@@ -49,7 +49,8 @@ public class CharacterMovement : MonoBehaviour
     public float jetImpulse = 20f;
     public float jetEnergyCost = 5f;
 
-    private bool isGrounded, hasSpawned, kickPending;
+    [SerializeField]
+    public bool isGrounded, hasSpawned, kickPending;
     private Vector3 groundNormal = Vector3.up;
     private Vector3 gravityDir = Vector3.down;
     private KickAimUI aimUI;
@@ -66,7 +67,7 @@ public class CharacterMovement : MonoBehaviour
         anim = GetComponentInChildren<Animator>();
         camStand = Object.FindAnyObjectByType<CameraMovement>();
         
-        if (rb != null) rb.isKinematic = true; 
+        velocity = Vector3.zero;
     }
 
     void Start()
@@ -242,10 +243,12 @@ public class CharacterMovement : MonoBehaviour
         currentGroundTf = null;
 
         transform.up = launchDir;
+        rb.rotation = transform.rotation;
         aimHoldTimer = aimHoldSeconds;
 
         float force = (aimUI != null) ? aimUI.SelectedForce : kickForce;
         velocity = launchDir * force;
+        rb.AddForceAtPosition(velocity, feet.position, ForceMode.VelocityChange);
 
         airLockTimer = kickAirLock;
 
@@ -265,6 +268,7 @@ public class CharacterMovement : MonoBehaviour
         
         airLockTimer = 0.3f; // Brief protection so we don't re-stick
         isGrounded = false;
+        rb.AddForce(velocity);
         if (CameraShake.Instance != null) CameraShake.Instance.AddTrauma(0.2f);
     }
 

@@ -40,7 +40,36 @@ ModelImporter:
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties: []
-    clipAnimations: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: Stickman 6|t
+      takeName: Stickman 6|t
+      internalID: 1087666994901432720
+      firstFrame: 0
+      lastFrame: 1
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 1
+      loopBlendPositionXZ: 1
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 0
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 1
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
     isReadable: 0
   meshes:
     lODScreenPercentages: []
@@ -63,8 +92,8 @@ ModelImporter:
     weldVertices: 1
     bakeAxisConversion: 0
     preserveHierarchy: 0
-    skinWeightsMode: 0
-    maxBonesPerVertex: 4
+    skinWeightsMode: 1
+    maxBonesPerVertex: 20
     minBoneWeight: 0.001
     optimizeBones: 1
     generateMeshLods: 0
@@ -357,7 +386,7 @@ ModelImporter:
     - name: LeftFoot
       parentName: LeftLeg
       position: {x: 0.00000012386593, y: 0.16643353, z: 0.0000001527369}
-      rotation: {x: -0.27180904, y: 0.75677484, z: -0.53638285, w: 0.25633007}
+      rotation: {x: -0.5786999, y: 0.33908352, z: 0.16619371, w: -0.7228476}
       scale: {x: 1.0000001, y: 1.0000001, z: 1}
     - name: LeftToeBase
       parentName: LeftFoot
@@ -377,7 +406,7 @@ ModelImporter:
     - name: RightUpLeg
       parentName: Hips
       position: {x: 0.028908068, y: -0.02751825, z: 0.000032299966}
-      rotation: {x: 0.0001734117, y: -0.0069483533, z: 0.99984145, w: 0.016393559}
+      rotation: {x: 0.0001734117, y: -0.0069483537, z: 0.99984145, w: 0.01639356}
       scale: {x: 0.9999982, y: 0.99999976, z: 1}
     - name: RightLeg
       parentName: RightUpLeg
@@ -387,7 +416,7 @@ ModelImporter:
     - name: RightFoot
       parentName: RightLeg
       position: {x: 0.000000026077036, y: 0.16643474, z: 0.0000004037284}
-      rotation: {x: 0.4361959, y: 0.81614774, z: -0.107601784, w: -0.36339763}
+      rotation: {x: 0.32580665, y: 0.7275484, z: 0.29207245, w: 0.52841}
       scale: {x: 1.0000001, y: 1.0000004, z: 1.0000001}
     - name: RightToeBase
       parentName: RightFoot

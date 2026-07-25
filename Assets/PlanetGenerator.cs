@@ -286,7 +286,6 @@ public class PlanetGenerator : MonoBehaviour
 
         Rigidbody rb = rock.GetComponent<Rigidbody>();
         if (rb == null) rb = rock.AddComponent<Rigidbody>();
-        rb.isKinematic = true;
         rb.useGravity = false;
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
