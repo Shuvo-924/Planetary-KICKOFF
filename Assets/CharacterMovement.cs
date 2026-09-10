@@ -327,7 +327,7 @@ public class CharacterMovement : MonoBehaviour
         Vector3 center = PlanetGenerator.GetPlanetCenter(planet);
         float radius = PlanetGenerator.GetPlanetRadius(planet);
         Vector3 normal = outward.normalized;
-        Vector3 spawnPos = center + normal * (radius + standHeight + surfacePad);
+        Vector3 spawnPos = center + normal * radius;
         
         transform.position = spawnPos;
         transform.up = normal;

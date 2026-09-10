@@ -19,7 +19,7 @@ public class AsteroidMotion : MonoBehaviour
     float spinSpeed = 1f;
     Vector3 recoil;
     float mass = 80f;
-    SphereCollider landCol;
+    MeshCollider landCol;
     float landRadius = 1f;
 
     public Bounds WorldBounds
@@ -38,15 +38,9 @@ public class AsteroidMotion : MonoBehaviour
 {
     get
     {
-        // Use the Renderer's bounds as the most accurate world-space size
-        var r = GetComponent<SphereCollider>();
-        if (r != null)
-        {
-            // We take the largest extent to ensure a safe "Catch Sphere"
-            Vector3 extents = r.radius * Vector3.one;
-            return Mathf.Max(extents.x, Mathf.Max(extents.y, extents.z)) * 1.3f;
-        }
-        return transform.lossyScale.y * 1.3f;
+            // Use the Renderer's bounds as the most accurate world-space size
+            var r = GetComponent<MeshCollider>();
+        return transform.lossyScale.y;
     }
 }
 
@@ -81,9 +75,7 @@ public class AsteroidMotion : MonoBehaviour
     public bool TryGetLanding(Vector3 from, out Vector3 point, out Vector3 normal, out float distance)
     {
         EnsureLandCollider();
-        Vector3 center = landCol != null
-            ? transform.TransformPoint(landCol.center)
-            : transform.position;
+        Vector3 center = transform.position;
         float r = LandRadius;
 
         Vector3 to = from - center;
@@ -139,10 +131,8 @@ public class AsteroidMotion : MonoBehaviour
         }
 
         landRadius = Mathf.Max(0.2f, localR);
-        landCol = gameObject.GetComponent<SphereCollider>();
-        if (landCol == null) landCol = gameObject.AddComponent<SphereCollider>();
-        landCol.center = localCenter;
-        landCol.radius = landRadius;
+        landCol = gameObject.GetComponent<MeshCollider>();
+        if (landCol == null) landCol = gameObject.AddComponent<MeshCollider>();
         landCol.isTrigger = false;
     }
 
